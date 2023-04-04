@@ -4,6 +4,7 @@ using Bulky.DataAccess.Repository;
 using Bulky.DataAccess.Repository.IRepository;
 using Bulky.Models;
 using Bulky.Models.VIewModels;
+using ecommerce.BL.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -55,21 +56,28 @@ namespace BulkyWeb.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                string wwwRootPath = _webHostEnvironment.WebRootPath;
+                
                 if (file != null)
                 {
-                    string FileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                    string ProductPath = Path.Combine(wwwRootPath, @"images\prouct");
-                    using (var fileStream = new FileStream(Path.Combine(wwwRootPath, FileName), FileMode.Create))
+                    if (!string.IsNullOrEmpty(obj.Product.ImageUrl))
                     {
-                        file.CopyTo(fileStream);
+                        FileUploader.DeleteFile("/wwwroot/Images/product/", obj.Product.ImageUrl);
                     }
-                    obj.Product.ImageUrl = @"\images\product\" + FileName;
+                    obj.Product.ImageUrl= FileUploader.UploadFile("/wwwroot/Images/product", file);
+                }
+                if (obj.Product.Id==0)
+                {
+                    _unitOfWork.product.Add(obj.Product);
+                    TempData["success"] = "Product Created Successfully";
 
                 }
-                _unitOfWork.product.Add(obj.Product);
+                else
+                {
+                    _unitOfWork.product.Update(obj.Product);
+                    TempData["success"] = "Product Updated Successfully";
+                }
                 _unitOfWork.Save();
-                TempData["success"] = "Product Created Successfully";
+             
                 return RedirectToAction("Index");
             }
             return View(obj);
