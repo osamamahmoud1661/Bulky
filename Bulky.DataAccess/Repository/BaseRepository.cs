@@ -25,19 +25,34 @@ namespace Bulky.DataAccess.Repository
             _dbset.Add(entity);
         }
 
-        public T Get(Expression<Func<T, bool>> filter)
+        public T Get(Expression<Func<T, bool>> filter, string[] Includes = null)
         {
-            IQueryable<T> query = _dbset;
-            query = query.Where(filter);
-            return query.FirstOrDefault(); ;
+            IQueryable<T> query = _dbset.Where(filter);
+            if (Includes != null)
+            {
+                foreach (var item in Includes)
+                {
+                    query = query.Include(item);
+                }
+            }
+            
+            return query.FirstOrDefault();
         }
 
-        public IEnumerable<T> GetAll()
+
+        public IEnumerable<T> GetAll(string[] Includes = null)
         {
             IQueryable<T> query = _dbset;
+            if (Includes != null)
+            {
+                foreach (var item in Includes)
+                {
+                    query = query.Include(item);
+                }
+            }
             return query.ToList();
-
         }
+
 
         public void Remove(T entity)
         {

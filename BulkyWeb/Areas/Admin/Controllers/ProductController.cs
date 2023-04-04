@@ -22,7 +22,8 @@ namespace BulkyWeb.Areas.Admin.Controllers
         }
         public IActionResult Index()
         {
-            List<Product> Products = _unitOfWork.product.GetAll().ToList();
+            var s = new string[5];
+            List<Product> Products = _unitOfWork.product.GetAll(new[] {"Category"} ).ToList();
             return View(Products);
         }
         [HttpGet]
@@ -83,28 +84,51 @@ namespace BulkyWeb.Areas.Admin.Controllers
             return View(obj);
 
         }       
+        //[HttpGet]
+        //public IActionResult Delete(int Id)
+        //{
+        //    if (Id == null || Id == 0)
+        //    {
+        //        return NotFound();
+        //    }
+        //    var product = _unitOfWork.product.Get(u => u.Id == Id);
+        //    if (product == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    return View(product);
+        //}
+        //[HttpPost]
+        //public IActionResult Delete(Product obj)
+        //{
+        //    FileUploader.DeleteFile("/wwwroot/Images/product/", obj.ImageUrl);
+        //    _unitOfWork.product.Remove(obj);
+        //    _unitOfWork.Save();
+        //    TempData["success"] = "Product Deleted Successfully";
+        //    return RedirectToAction("Index");
+        //}
+        #region Ajax methods
         [HttpGet]
-        public IActionResult Delete(int Id)
+        public IActionResult GetAll()
         {
-            if (Id == null || Id == 0)
-            {
-                return NotFound();
-            }
-            var product = _unitOfWork.product.Get(u => u.Id == Id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            return View(product);
+            List<Product> Products = _unitOfWork.product.GetAll(new[] { "Category" }).ToList();
+            return Json(new { data = Products });
         }
-        [HttpPost]
-        public IActionResult Delete(Product obj)
+        [HttpDelete]
+        public IActionResult Delete(int? Id)
         {
-
-            _unitOfWork.product.Remove(obj);
+            var product = _unitOfWork.product.Get(u => u.Id == Id);
+            if (product==null)
+            {
+                return Json(new { success = "Error while deleting product!" });
+            }
+            FileUploader.DeleteFile("/wwwroot/Images/product/", product.ImageUrl);
+            _unitOfWork.product.Remove(product);
             _unitOfWork.Save();
             TempData["success"] = "Product Deleted Successfully";
-            return RedirectToAction("Index");
+            return Json(new { success = "Deleted Successfuly!" });
+
         }
+        #endregion
     }
 }
