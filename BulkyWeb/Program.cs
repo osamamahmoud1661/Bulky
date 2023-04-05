@@ -3,6 +3,9 @@ using Bulky.DataAccess.Repository;
 using Bulky.DataAccess.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Bulky.Models;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Bulky.Utility;
 
 namespace BulkyWeb
 {
@@ -17,9 +20,19 @@ namespace BulkyWeb
             builder.Services.AddDbContext<ApplicationDBContext>(opt => 
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddDefaultIdentity<IdentityUser>().AddEntityFrameworkStores<ApplicationDBContext>();
+            builder.Services.AddIdentity<IdentityUser,IdentityRole>().AddEntityFrameworkStores<ApplicationDBContext>().AddDefaultTokenProviders();
+            builder.Services.ConfigureApplicationCookie(option =>
+            {
+                option.LoginPath = $"/Identity/Account/Login";
+                option.LogoutPath = $"/Identity/Account/Logout";
+                option.AccessDeniedPath = $"/Identity/Account/AccessDenied";
+
+            });
+
             builder.Services.AddRazorPages();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IEmailSender, EmailSender>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
