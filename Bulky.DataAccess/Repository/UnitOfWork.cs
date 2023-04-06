@@ -13,6 +13,7 @@ namespace Bulky.DataAccess.Repository
         public ICategoryRepository category {get; private set;}
 
         public IProductRepository product { get; private set;}
+        public ICompanyRepository company { get; private set; }
 
         private readonly ApplicationDBContext _db;
         public UnitOfWork(ApplicationDBContext db)
@@ -20,6 +21,7 @@ namespace Bulky.DataAccess.Repository
             this._db = db;
             category = new CategoryRepository(_db);
             product = new ProductRepository(_db);
+            company = new CompanyRepository(_db);
         }
         public void Save()
         {
