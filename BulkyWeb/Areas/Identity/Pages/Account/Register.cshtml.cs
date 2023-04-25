@@ -142,7 +142,7 @@ namespace BulkyWeb.Areas.Identity.Pages.Account
                     Text = i,
                     Value = i
                 }),
-                CompanyList = _unitOfWork.company.GetAll().Select(i => new SelectListItem
+                CompanyList = _unitOfWork.company.GetAll(null).Select(i => new SelectListItem
                 {
                     Text = i.Name,
                     Value = i.Id.ToString()

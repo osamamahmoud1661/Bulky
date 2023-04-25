@@ -9,11 +9,13 @@ namespace Bulky.DataAccess.Repository.IRepository
 {
     public interface IBaseRepository<T> where T : class
     {
-        IEnumerable<T> GetAll(string[] Includes = null);
-        T Get(Expression<Func<T, bool>> filter, string[] Includes = null);
+       
+
+        IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter = null, string? includeProperties = null);
+        T Get(Expression<Func<T, bool>> filter, string? includeProperties = null, bool tracked = false);
         void Add(T entity);
         void Remove(T entity);
-        void RemoveRange(IEnumerable<T> entities);
+        void RemoveRange(IEnumerable<T> entity);
 
     }
 }

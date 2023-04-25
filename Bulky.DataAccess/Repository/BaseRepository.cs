@@ -13,55 +13,74 @@ namespace Bulky.DataAccess.Repository
     public class BaseRepository<T> : IBaseRepository<T> where T : class
     {
         private readonly ApplicationDBContext _db;
-        public DbSet<T> _dbset;
+        internal DbSet<T> dbSet;
         public BaseRepository(ApplicationDBContext db)
         {
             _db = db;
-            _dbset = _db.Set<T>();
+            this.dbSet = _db.Set<T>();
+            //_db.Categories == dbSet
+            _db.Products.Include(u => u.Category).Include(u => u.CategoryId);
+
         }
+        
 
         public void Add(T entity)
         {
-            _dbset.Add(entity);
+            dbSet.Add(entity);
         }
 
-        public T Get(Expression<Func<T, bool>> filter, string[] Includes = null)
+        public T Get(Expression<Func<T, bool>> filter, string? includeProperties = null, bool tracked = false)
         {
-            IQueryable<T> query = _dbset.Where(filter);
-            if (Includes != null)
+            IQueryable<T> query;
+            if (tracked)
             {
-                foreach (var item in Includes)
+                query = dbSet;
+
+            }
+            else
+            {
+                query = dbSet.AsNoTracking();
+            }
+
+            query = query.Where(filter);
+            if (!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var includeProp in includeProperties
+                    .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    query = query.Include(item);
+                    query = query.Include(includeProp);
                 }
             }
-            
             return query.FirstOrDefault();
+
         }
 
-
-        public IEnumerable<T> GetAll(string[] Includes = null)
+        public IEnumerable<T> GetAll(Expression<Func<T, bool>>? filter, string? includeProperties = null)
         {
-            IQueryable<T> query = _dbset;
-            if (Includes != null)
+            IQueryable<T> query = dbSet;
+            if (filter != null)
             {
-                foreach (var item in Includes)
+                query = query.Where(filter);
+            }
+            if (!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var includeProp in includeProperties
+                    .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    query = query.Include(item);
+                    query = query.Include(includeProp);
                 }
             }
             return query.ToList();
         }
 
-
         public void Remove(T entity)
         {
-            _dbset.Remove(entity);
+            dbSet.Remove(entity);
         }
 
-        public void RemoveRange(IEnumerable<T> entities)
+        public void RemoveRange(IEnumerable<T> entity)
         {
-            _dbset.RemoveRange(entities);
+            dbSet.RemoveRange(entity);
         }
     }
 }
