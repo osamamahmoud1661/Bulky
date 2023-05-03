@@ -3,8 +3,10 @@ using Bulky.Models;
 using Bulky.Models.VIewModels;
 using Bulky.Utility;
 using ecommerce.BL.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace BulkyWeb.Areas.Admin.Controllers
 {
@@ -30,9 +32,28 @@ namespace BulkyWeb.Areas.Admin.Controllers
             return View(orderVM);
         }
         [HttpPost]
-        public IActionResult Details(OrderVM orderVM)
+        [Authorize(Roles =SD.Role_Admin+","+SD.Role_Employee)]
+        public IActionResult UpdateOrderDetails(OrderVM orderVM)
         {
-            return View(orderVM);
+            var oldOrderHeaderFromDB = _unitOfWork.OrderHeader.Get(u => u.Id == orderVM.OrderHeader.Id);
+            oldOrderHeaderFromDB.Name = orderVM.OrderHeader.Name;
+            oldOrderHeaderFromDB.PhoneNumber = orderVM.OrderHeader.PhoneNumber;
+            oldOrderHeaderFromDB.City = orderVM.OrderHeader.City;
+            oldOrderHeaderFromDB.State = orderVM.OrderHeader.State;
+            oldOrderHeaderFromDB.PostalCode = orderVM.OrderHeader.PostalCode;
+            oldOrderHeaderFromDB.StreetAddress = orderVM.OrderHeader.StreetAddress;
+            if (!string.IsNullOrEmpty(orderVM.OrderHeader.Carrier))
+            {
+                oldOrderHeaderFromDB.Carrier = orderVM.OrderHeader.Carrier;
+            }
+            if (!string.IsNullOrEmpty(orderVM.OrderHeader.TrackingNumber))
+            {
+                oldOrderHeaderFromDB.TrackingNumber = orderVM.OrderHeader.TrackingNumber;
+            }
+            _unitOfWork.OrderHeader.Update(oldOrderHeaderFromDB);
+            _unitOfWork.Save();
+            TempData["success"] = "Order Details Updated successfully";
+            return RedirectToAction(nameof(Details), new { orderId = oldOrderHeaderFromDB.Id});
         }
 
 
@@ -40,8 +61,20 @@ namespace BulkyWeb.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAll(string status)
         {
-            IEnumerable<OrderHeader> objOrderHeaders = _unitOfWork.OrderHeader.GetAll(includeProperties: "applicationUser").ToList();
+            IEnumerable<OrderHeader> objOrderHeaders;
 
+            if (User.IsInRole(SD.Role_Admin)||User.IsInRole(SD.Role_Employee))
+            {
+                objOrderHeaders = _unitOfWork.OrderHeader.GetAll(includeProperties: "applicationUser").ToList();
+            }
+            else
+            {
+                var claimsIdentity = (ClaimsIdentity)User.Identity;
+                var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                objOrderHeaders = _unitOfWork.OrderHeader.GetAll(u=>u.ApplicationUserId==userId,includeProperties: "applicationUser").ToList();
+            }
+            
             switch (status)
             {
                 case "pending":
