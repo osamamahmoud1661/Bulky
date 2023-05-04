@@ -212,7 +212,10 @@ namespace BulkyWeb.Areas.Customer.Controllers
                     _unitOfWork.Save();
                 }
             }
-
+            List<ShoppingCart> shoppingCarts = _unitOfWork.shoppingCart.
+                GetAll(u => u.ApplcationUserId == orderHeader.ApplicationUserId).ToList();
+            _unitOfWork.shoppingCart.RemoveRange(shoppingCarts);
+            _unitOfWork.Save();
 
             return View(id);
         }
