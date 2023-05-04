@@ -11,6 +11,7 @@ using System.Security.Claims;
 namespace BulkyWeb.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize]
     public class OrderController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -55,8 +56,29 @@ namespace BulkyWeb.Areas.Admin.Controllers
             TempData["success"] = "Order Details Updated successfully";
             return RedirectToAction(nameof(Details), new { orderId = oldOrderHeaderFromDB.Id});
         }
+        [HttpPost]
+        [Authorize (Roles =SD.Role_Admin+","+SD.Role_Employee)]
+        public IActionResult StartProcessing(OrderVM orderVM)
+        {
+            _unitOfWork.OrderHeader.UpdateStatus(orderVM.OrderHeader.Id, SD.StatusInProcess);
+            _unitOfWork.Save();
+            TempData["success"] = "Order is in processing";
+            return RedirectToAction(nameof(Details), new { orderId = orderVM.OrderHeader.Id });
+        }
+        [HttpPost]
+        [Authorize(Roles = SD.Role_Admin + "," + SD.Role_Employee)]
+        public IActionResult ShipOrder(OrderVM orderVM)
+        {
+            var orderHeader = _unitOfWork.OrderHeader.Get(u=>u.Id== orderVM.OrderHeader.Id);
+            if (!string.IsNullOrEmpty(orderVM.OrderHeader.Carrier))
+            {
 
-
+            }
+            _unitOfWork.OrderHeader.UpdateStatus(orderVM.OrderHeader.Id, SD.StatusShipped);
+            _unitOfWork.Save();
+            TempData["success"] = "Order is shipped ";
+            return RedirectToAction(nameof(Details), new { orderId = orderVM.OrderHeader.Id });
+        }
         #region Ajax methods
         [HttpGet]
         public IActionResult GetAll(string status)
