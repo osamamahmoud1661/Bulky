@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stripe.Checkout;
 using Stripe;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BulkyWeb.Areas.Customer.Controllers
 {
@@ -19,6 +20,7 @@ namespace BulkyWeb.Areas.Customer.Controllers
         {
             _unitOfWork = unitOfWork;
         }
+        [Authorize]
         public IActionResult Index()
         {
             var claimsIdentity = (ClaimsIdentity)User.Identity;
@@ -58,6 +60,8 @@ namespace BulkyWeb.Areas.Customer.Controllers
             if (CartFromDB.Count <= 1)
             {
                 _unitOfWork.shoppingCart.Remove(CartFromDB);
+                HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.shoppingCart.
+                GetAll(u => u.ApplcationUserId == CartFromDB.ApplcationUserId).Count() - 1);
             }
             else
             {
@@ -71,8 +75,9 @@ namespace BulkyWeb.Areas.Customer.Controllers
         public IActionResult Remove(int cardId)
         {
             var CartFromDB = _unitOfWork.shoppingCart.Get(u => u.Id == cardId);
-           
             _unitOfWork.shoppingCart.Remove(CartFromDB);
+            HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.shoppingCart.
+                GetAll(u => u.ApplcationUserId == CartFromDB.ApplcationUserId).Count() - 1);
             _unitOfWork.Save();
             return RedirectToAction(nameof(Index));
         }

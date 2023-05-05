@@ -23,7 +23,14 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
 
         public IActionResult Index()
         {
+            var claimsIdenty = (ClaimsIdentity)User.Identity;
+            var user = claimsIdenty.FindFirst(ClaimTypes.NameIdentifier);
+            if (user != null)
+            {
+                HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.shoppingCart.GetAll(u => u.ApplcationUserId == user.Value).Count());
+            }
             IEnumerable<Product> productlist = _unitOfWork.product.GetAll(includeProperties: "Category");
+
             return View(productlist);
         }
         [HttpGet]
@@ -59,7 +66,7 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
             {
                 _unitOfWork.shoppingCart.Add(shoppingCart);
                 _unitOfWork.Save();
-                HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.shoppingCart.Get(u => u.ApplcationUserId == userId).Count);
+                HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.shoppingCart.GetAll(u => u.ApplcationUserId == userId).Count());
             }
             TempData["success"] = "Cart Updated successfully";
 
