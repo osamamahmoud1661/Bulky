@@ -7,6 +7,7 @@ using Bulky.Models;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Bulky.Utility;
 using Stripe;
+using Bulky.DataAccess.DBInitializer;
 
 namespace BulkyWeb
 {
@@ -47,6 +48,7 @@ namespace BulkyWeb
                 option.AppSecret = "ce341c81d8951c4630ea6016e2fb6027";
             });
 
+            builder.Services.AddScoped<IDBInitializer, DBInitializer>();
             builder.Services.AddRazorPages();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IEmailSender, EmailSender>();
@@ -68,12 +70,22 @@ namespace BulkyWeb
             app.UseAuthentication();    
             app.UseAuthorization();
             app.UseSession();
+            SeedDatabase();
             app.MapRazorPages();
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
+
+            void SeedDatabase()
+            {
+                using(var scoped = app.Services.CreateScope())
+                {
+                    var DbInilizer = scoped.ServiceProvider.GetRequiredService<IDBInitializer>();
+                    DbInilizer.Initialize();
+                }
+            }
         }
     }
 }
