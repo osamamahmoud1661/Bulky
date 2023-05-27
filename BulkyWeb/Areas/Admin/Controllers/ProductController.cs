@@ -26,7 +26,6 @@ namespace BulkyWeb.Areas.Admin.Controllers
         }
         public IActionResult Index()
         {
-            var s = new string[5];
             var Products = _unitOfWork.product.GetAll(includeProperties: "Category");
             return View(Products);
         }
